@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EKOSWARA SMART DASHBOARD</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS (Ekspor Excel) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F4F6F8;
+            color: #1A202C;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* ATURAN KHUSUS CETAK PDF / PRINT RAPI */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+            }
+            #login-page, #petugas-dashboard, header, .no-print {
+                display: none !important;
+            }
+            #admin-dashboard {
+                display: block !important;
+            }
+            main {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-card {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+                margin-bottom: 1.5rem !important;
+            }
+            .pdf-header {
+                display: flex !important;
+            }
+            .pdf-footer {
+                display: block !important;
+            }
+        }
+
+        .pdf-header, .pdf-footer {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- JANGKAR API GOOGLE APPS SCRIPT -->
+    <script>
+        // TEMPELKAN URL DEPLOY APPS SCRIPT ANDA DI ANTARA TANDA KUTIP DI BAWAH INI
+        const API_URL = "https://script.google.com/macros/s/AKfycbxHzX8WKv-vASVjgaqqJoU4ejeoPrja8N_d_0biF6eGq8O-K1EKujOTru2WbvOtIyAT/exec";
+    </script>
+
+    <!-- APP CONTAINER -->
+    <div id="app" class="flex-1 flex flex-col">
+        
+        <!-- ================= PAGE 1: LOGIN PAGE ================= -->
+        <div id="login-page" class="flex-1 flex items-center justify-center p-4">
+            <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-100 p-8 transition-all duration-300">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 mb-4 shadow-sm">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-900">EKOSWARA</h1>
+                    <p class="text-sm font-medium text-emerald-600 mt-1">Smart Community Waste Dashboard</p>
+                </div>
+
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Email / Username</label>
+                        <input type="text" id="username" required placeholder="admin@EKOSWARA.com atau sukajadi@EKOSWARA.com" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Password</label>
+                        <input type="password" id="password" required placeholder="••••••••" 
+                            class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all">
+                    </div>
+                    <div id="login-error" class="hidden text-xs font-medium text-rose-500 text-center"></div>
+                    <button type="submit" 
+                        class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition-all duration-200 text-sm">
+                        Masuk ke Dasbor
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
+                    <p>Demo Akun:</p>
+                    <p class="mt-1 font-mono text-slate-500">Silahkan masukan email anda !</p>
+                    <p class="font-mono text-slate-500">Dan gunakan password yang sesuai </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2: MAIN DASHBOARD (ADMIN) ================= -->
+        <div id="admin-dashboard" class="hidden flex-1 flex flex-col">
+            <!-- HEADER APP -->
+            <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-30 shadow-xs no-print">
+                <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 tracking-tight">EKOSWARA SMART DASHBOARD</h2>
+                            <p id="status-loading" class="text-xs text-emerald-600 font-medium">Pusat Kendali Pengolahan Sampah Komunitas</p>
+                        </div>
+                    </div>
+
+                    <!-- FITUR BARU: FILTER TANGGAL & TOMBOL EKSPOR -->
+                    <div class="flex flex-wrap items-center space-x-2 sm:space-x-3 w-full lg:w-auto justify-end">
+                        <!-- Filter Tanggal Mula & Akhir -->
+                        <div class="flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 text-xs">
+                            <input type="date" id="filter-start-date" onchange="applyDateFilter()" class="bg-transparent px-2 py-1 text-slate-700 font-medium focus:outline-none">
+                            <span class="text-slate-400 font-bold">-</span>
+                            <input type="date" id="filter-end-date" onchange="applyDateFilter()" class="bg-transparent px-2 py-1 text-slate-700 font-medium focus:outline-none">
+                        </div>
+
+                        <button onclick="fetchDashboardData()" title="Sinkronkan Data" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-600 text-xs font-semibold hover:bg-emerald-100 transition-all flex items-center gap-1">
+                            🔄 Sync Realtime
+                        </button>
+                        
+                        <!-- DROPDOWN EKSPOR LAPORAN -->
+                        <div class="relative inline-block text-left">
+                            <button onclick="toggleExportMenu()" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all flex items-center gap-1.5 shadow-sm">
+                                📥 Ekspor Laporan
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div id="export-dropdown" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-white shadow-xl border border-slate-100 z-50 py-1 text-xs">
+                                <button onclick="exportToPDF()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2 font-medium">
+                                    🖨️ Cetak / Simpan PDF Rapi
+                                </button>
+                                <button onclick="exportToExcel()" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2 font-medium">
+                                    📊 Unduh Data Excel (.xlsx)
+                                </button>
+                            </div>
+                        </div>
+
+                        <button onclick="handleLogout()" title="Keluar" class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main id="export-content" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+                
+                <!-- HEADER RESMI KHUSUS PDF -->
+                <div class="pdf-header items-center justify-between border-b-2 border-emerald-600 pb-4 mb-6">
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900">LAPORAN REKAPITULASI PENGOLAHAN SAMPAH KOMUNITAS</h1>
+                        <p class="text-xs text-slate-600 font-medium">Program Sistem Informasi Lingkungan EKOSWARA</p>
+                    </div>
+                    <div class="text-right text-xs text-slate-500">
+                        <p id="pdf-date">Dicetak pada: -</p>
+                        <p class="font-semibold text-emerald-600">Status Data: Terverifikasi</p>
+                    </div>
+                </div>
+
+                <!-- 4 KPI CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between print-card">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Sampah</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="kpi-total-sampah" class="text-2xl font-bold text-slate-900 tracking-tight">0 kg</h3>
+                            <p class="text-xs text-emerald-600 font-medium mt-1">Total Volume Masuk</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between print-card">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Reduksi Sampah</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="kpi-reduksi-sampah" class="text-2xl font-bold text-slate-900 tracking-tight">0%</h3>
+                            <p class="text-xs text-emerald-600 font-medium mt-1">Tingkat Pengolahan</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between print-card">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Reduksi Emisi</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="kpi-reduksi-emisi" class="text-2xl font-bold text-slate-900 tracking-tight">0 Ton CO2e</h3>
+                            <p class="text-xs text-slate-500 mt-1">Konversi Organik x 2,1</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 flex flex-col justify-between print-card">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Nilai Ekonomi</span>
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h3 id="kpi-nilai-ekonomi" class="text-2xl font-bold text-slate-900 tracking-tight">Rp 0</h3>
+                            <p class="text-xs text-slate-500 mt-1">Kompos & Maggot BSF</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHARTS & TABLES -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <!-- Grafik Tren (Terisolasi rapi agar tidak overflow) -->
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 print-card overflow-hidden">
+                            <h4 class="text-sm font-bold text-slate-900 mb-4">Grafik Tren Pengolahan</h4>
+                            <div class="h-64 w-full relative overflow-hidden">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Grafik Efisiensi -->
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 print-card overflow-hidden">
+                            <h4 class="text-sm font-bold text-slate-900 mb-4">Efisiensi Sampah (Organik vs Residu)</h4>
+                            <div class="flex flex-col sm:flex-row items-center justify-around gap-4">
+                                <div class="w-48 h-48 relative overflow-hidden">
+                                    <canvas id="efficiencyChart"></canvas>
+                                </div>
+                                <div class="space-y-3 text-sm">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                        <div><p id="text-diolah" class="font-semibold text-slate-800">0% Diolah</p></div>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-3 h-3 rounded-full bg-slate-200"></div>
+                                        <div><p id="text-residu" class="font-semibold text-slate-800">0% Residu</p></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Farming Output -->
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 print-card">
+                            <h4 class="text-sm font-bold text-slate-900 mb-6">Farming Output (Panen)</h4>
+                            <div class="space-y-5">
+                                <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">🌱</div>
+                                        <div>
+                                            <p class="text-xs text-slate-400 uppercase font-semibold">Pupuk Organik</p>
+                                            <p id="output-kompos" class="text-base font-bold text-slate-900">0 kg</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Rp 1.500/kg</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">🪱</div>
+                                        <div>
+                                            <p class="text-xs text-slate-400 uppercase font-semibold">Maggot BSF</p>
+                                            <p id="output-maggot" class="text-base font-bold text-slate-900">0 kg</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">Rp 6.000/kg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Leaderboard Kelurahan -->
+                        <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-100 print-card">
+                            <h4 class="text-sm font-bold text-slate-900 mb-4">Leaderboard Kontribusi Kelurahan</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="text-xs text-slate-400 uppercase border-b border-slate-100">
+                                            <th class="py-3 font-semibold w-12">#</th>
+                                            <th class="py-3 font-semibold">Kelurahan</th>
+                                            <th class="py-3 font-semibold text-right">Total Sampah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="leaderboard-body" class="divide-y divide-slate-50 text-sm"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOOTER TANDA TANGAN KHUSUS PDF -->
+                <div class="pdf-footer pt-12">
+                    <div class="flex justify-between text-xs text-slate-700">
+                        <div class="text-center w-48">
+                            <p>Petugas Penanggung Jawab,</p>
+                            <div class="h-16"></div>
+                            <p class="font-bold underline">( ______________________ )</p>
+                        </div>
+                        <div class="text-center w-48">
+                            <p>Koordinator Program EKOSWARA,</p>
+                            <div class="h-16"></div>
+                            <p class="font-bold underline">( ______________________ )</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <!-- ================= PAGE 3: FIELD INPUT FORM (PETUGAS) ================= -->
+        <div id="petugas-dashboard" class="hidden flex-1 flex flex-col">
+            <header class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-30 shadow-xs">
+                <div class="max-w-2xl mx-auto flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900 tracking-tight">Input Lapangan</h2>
+                            <p class="text-xs text-emerald-600 font-medium">EKOSWARA SMART DASHBOARD</p>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all">
+                        Keluar
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 max-w-2xl w-full mx-auto p-4 sm:p-6 flex items-center justify-center">
+                <div class="w-full bg-white rounded-2xl shadow-xl border border-slate-100 p-6 sm:p-8">
+                    <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800">
+                        <p class="text-sm font-semibold" id="petugas-welcome">Selamat Bekerja, Petugas Lapangan</p>
+                        <p class="text-xs text-emerald-600 mt-0.5">Data yang Anda masukkan langsung tersimpan ke Google Sheets.</p>
+                    </div>
+
+                    <form id="input-form" onsubmit="handleSubmitData(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Wilayah Kelurahan</label>
+                            <input type="text" id="input-kelurahan" value="Sukajadi" disabled class="w-full px-4 py-3 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-sm font-medium cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Tanggal Pengolahan</label>
+                            <input type="date" id="input-tanggal" required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Berat Sampah Organik Masuk (kg)</label>
+                            <input type="number" id="input-organik" min="0" step="0.1" required placeholder="Contoh: 150" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Berat Sampah Residu / Tidak Terolah (kg)</label>
+                            <input type="number" id="input-residu" min="0" step="0.1" required placeholder="Contoh: 25" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Hasil Panen Pupuk Kompos (kg)</label>
+                            <input type="number" id="input-kompos-val" min="0" step="0.1" required placeholder="Contoh: 80" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Hasil Panen Maggot BSF (kg)</label>
+                            <input type="number" id="input-maggot-val" min="0" step="0.1" required placeholder="Contoh: 30" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-600/20 transition-all duration-200 text-sm flex items-center justify-center space-x-2">
+                            <span>Kirim Data ke Google Sheets</span>
+                        </button>
+                    </form>
+
+                    <div id="success-alert" class="hidden mt-6 p-4 rounded-xl bg-emerald-500 text-white text-center text-sm font-semibold shadow-md">
+                        ✨ Data berhasil dikirim dan tersimpan di Google Sheets!
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SCRIPT UTAMA -->
+    <script>
+        let trendChartInstance = null;
+        let efficiencyChartInstance = null;
+        let globalRawData = [];
+
+        function toggleExportMenu() {
+            const dropdown = document.getElementById('export-dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('button') && !event.target.closest('#export-dropdown')) {
+                const dropdown = document.getElementById('export-dropdown');
+                if (dropdown && !dropdown.classList.contains('hidden')) {
+                    dropdown.classList.add('hidden');
+                }
+            }
+        }
+
+        // CETAK PDF RAPI MANFAATKAN ENGINE PRINT NATIVE BROWSER
+        function exportToPDF() {
+            toggleExportMenu();
+            const now = new Date();
+            document.getElementById('pdf-date').textContent = "Dicetak pada: " + now.toLocaleString('id-ID');
+            
+            // Re-render chart agar menyesuaikan lebar halaman cetak secara otomatis
+            if (trendChartInstance) trendChartInstance.resize();
+            if (efficiencyChartInstance) efficiencyChartInstance.resize();
+
+            setTimeout(() => {
+                window.print();
+            }, 300);
+        }
+
+        // EKSPOR DATA KE EXCEL (.xlsx)
+        function exportToExcel() {
+            toggleExportMenu();
+            if (!globalRawData || globalRawData.length === 0) {
+                alert("Belum ada data untuk diekspor.");
+                return;
+            }
+
+            const formattedData = globalRawData.map((item, index) => ({
+                "No": index + 1,
+                "Tanggal": item.tanggal || "-",
+                "Kelurahan": item.kelurahan || "-",
+                "Organik (kg)": parseFloat(item.organik) || 0,
+                "Residu (kg)": parseFloat(item.residu) || 0,
+                "Kompos (kg)": parseFloat(item.kompos) || 0,
+                "Maggot (kg)": parseFloat(item.maggot) || 0,
+                "Total Sampah (kg)": (parseFloat(item.organik) || 0) + (parseFloat(item.residu) || 0)
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(formattedData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Data Sampah");
+            worksheet['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+
+            XLSX.writeFile(workbook, `Rekap_Ekoswara_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        async function fetchDashboardData() {
+            const statusLabel = document.getElementById('status-loading');
+            statusLabel.textContent = "🔄 Mengambil data dari Google Sheets...";
+
+            try {
+                const response = await fetch(API_URL);
+                const result = await response.json();
+
+                if (result.result === "success" && result.data) {
+                    globalRawData = result.data;
+                    processSheetData(result.data);
+                    statusLabel.textContent = "✅ Data Google Sheets Ter-update";
+                }
+            } catch (error) {
+                console.error("Gagal koneksi:", error);
+                statusLabel.textContent = "❌ Gagal koneksi ke Google Sheets";
+            }
+        }
+
+        // FITUR BARU: FILTER TANGGAL
+        function applyDateFilter() {
+            const startDate = document.getElementById('filter-start-date').value;
+            const endDate = document.getElementById('filter-end-date').value;
+
+            if (!globalRawData || globalRawData.length === 0) return;
+
+            let filtered = globalRawData.filter(item => {
+                if (!item.tanggal) return true;
+                let itemDate = item.tanggal.slice(0, 10);
+                if (startDate && itemDate < startDate) return false;
+                if (endDate && itemDate > endDate) return false;
+                return true;
+            });
+
+            processSheetData(filtered);
+        }
+
+        function processSheetData(rows) {
+            let totalSampahAll = 0, totalOrganikAll = 0, totalKomposAll = 0, totalMaggotAll = 0;
+            let kelurahanMap = {};
+            let trendMap = { 'Minggu': 0, 'Senin': 0, 'Selasa': 0, 'Rabu': 0, 'Kamis': 0, 'Jumat': 0, 'Sabtu': 0 };
+
+            rows.forEach(row => {
+                let kel = row.kelurahan || "Lainnya";
+                let organik = parseFloat(row.organik) || 0;
+                let residu = parseFloat(row.residu) || 0;
+                let kompos = parseFloat(row.kompos) || 0;
+                let maggot = parseFloat(row.maggot) || 0;
+                let totalRow = organik + residu;
+
+                totalSampahAll += totalRow;
+                totalOrganikAll += organik;
+                totalKomposAll += kompos;
+                totalMaggotAll += maggot;
+
+                if (!kelurahanMap[kel]) kelurahanMap[kel] = 0;
+                kelurahanMap[kel] += totalRow;
+
+                if (row.tanggal) {
+                    let d = new Date(row.tanggal);
+                    let days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    let dayName = days[d.getDay()];
+                    if (dayName && trendMap[dayName] !== undefined) {
+                        trendMap[dayName] += totalRow;
+                    }
+                }
+            });
+
+            let emisi = (totalOrganikAll * 2.1).toFixed(1);
+            let nilaiEko = (totalKomposAll * 1500) + (totalMaggotAll * 6000);
+            let pctDiolah = totalSampahAll > 0 ? Math.round((totalOrganikAll / totalSampahAll) * 100) : 0;
+            let pctResidu = totalSampahAll > 0 ? 100 - pctDiolah : 0;
+
+            document.getElementById('kpi-total-sampah').textContent = totalSampahAll.toLocaleString('id-ID') + " kg";
+            document.getElementById('kpi-reduksi-sampah').textContent = pctDiolah + "%";
+            document.getElementById('kpi-reduksi-emisi').textContent = emisi + " Ton CO2e";
+            document.getElementById('kpi-nilai-ekonomi').textContent = "Rp " + nilaiEko.toLocaleString('id-ID');
+
+            document.getElementById('output-kompos').textContent = totalKomposAll.toLocaleString('id-ID') + " kg";
+            document.getElementById('output-maggot').textContent = totalMaggotAll.toLocaleString('id-ID') + " kg";
+
+            document.getElementById('text-diolah').textContent = pctDiolah + "% Diolah";
+            document.getElementById('text-residu').textContent = pctResidu + "% Residu";
+
+            if (efficiencyChartInstance) {
+                efficiencyChartInstance.data.datasets[0].data = [pctDiolah, pctResidu];
+                efficiencyChartInstance.update();
+            }
+
+            if (trendChartInstance) {
+                trendChartInstance.data.datasets[0].data = Object.values(trendMap);
+                trendChartInstance.update();
+            }
+
+            renderLeaderboardFromMap(kelurahanMap, totalSampahAll);
+        }
+
+        function renderLeaderboardFromMap(mapData, grandTotal) {
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = '';
+
+            let sorted = Object.keys(mapData).map(key => ({
+                name: key, total: mapData[key]
+            })).sort((a, b) => b.total - a.total);
+
+            sorted.forEach((item, index) => {
+                let pct = grandTotal > 0 ? Math.round((item.total / grandTotal) * 100) : 0;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 font-semibold text-slate-400 text-xs">#${index + 1}</td>
+                    <td class="py-3">
+                        <p class="font-semibold text-slate-800">Kel. ${item.name}</p>
+                        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                            <div class="bg-emerald-500 h-full rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </td>
+                    <td class="py-3 text-right font-bold text-slate-700">${item.total.toLocaleString('id-ID')} kg</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function initCharts() {
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            trendChartInstance = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
+                    datasets: [{
+                        label: 'Sampah (kg)',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#10b981',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: false
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: { left: 10, right: 10, top: 10, bottom: 10 } }
+                }
+            });
+
+            const ctxEff = document.getElementById('efficiencyChart').getContext('2d');
+            efficiencyChartInstance = new Chart(ctxEff, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Diolah', 'Residu'],
+                    datasets: [{
+                        data: [0, 0],
+                        backgroundColor: ['#10b981', '#e2e8f0'],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    layout: { padding: 10 }
+                }
+            });
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errBox = document.getElementById('login-error');
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+
+            errBox.classList.add('hidden');
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Memeriksa Akun...";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "login", email: user, password: pass })
+                });
+                const res = await response.json();
+
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Masuk ke Dasbor";
+
+                if (res.result === "success") {
+                    if (res.role === "Admin") {
+                        document.getElementById('login-page').classList.add('hidden');
+                        document.getElementById('admin-dashboard').classList.remove('hidden');
+                        initCharts();
+                        fetchDashboardData();
+                    } else if (res.role === "Petugas") {
+                        document.getElementById('login-page').classList.add('hidden');
+                        document.getElementById('petugas-dashboard').classList.remove('hidden');
+                        document.getElementById('input-kelurahan').value = res.wilayah;
+                        document.getElementById('petugas-welcome').textContent = `Selamat Bekerja, Petugas Kelurahan ${res.wilayah}`;
+                        document.getElementById('input-tanggal').valueAsDate = new Date();
+                    }
+                } else {
+                    errBox.textContent = "Email atau password salah, atau belum terdaftar di Google Sheets.";
+                    errBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Masuk ke Dasbor";
+                errBox.textContent = "Gagal terhubung ke Google Sheets.";
+                errBox.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('petugas-dashboard').classList.add('hidden');
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('login-form').reset();
+        }
+
+        function handleSubmitData(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const alertBox = document.getElementById('success-alert');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span>Mengirim data...</span>';
+
+            const payload = {
+                kelurahan: document.getElementById('input-kelurahan').value,
+                tanggal: document.getElementById('input-tanggal').value,
+                organik: document.getElementById('input-organik').value,
+                residu: document.getElementById('input-residu').value,
+                kompos: document.getElementById('input-kompos-val').value,
+                maggot: document.getElementById('input-maggot-val').value
+            };
+
+            fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Kirim Data ke Google Sheets</span>';
+                alertBox.classList.remove('hidden');
+                document.getElementById('input-form').reset();
+                document.getElementById('input-tanggal').valueAsDate = new Date();
+
+                setTimeout(() => { alertBox.classList.add('hidden'); }, 3000);
+            })
+            .catch(err => {
+                console.error(err);
+                btn.disabled = false;
+                btn.innerHTML = '<span>Kirim Data ke Google Sheets</span>';
+                alert('Gagal mengirim data.');
+            });
+        }
+    </script>
+</body>
+</html>
